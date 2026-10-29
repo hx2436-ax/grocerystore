@@ -22,3 +22,17 @@ Each shopper's shelf order is optimized by exhaustive permutation search from en
 ## Validation
 
 Run node test.mjs and node customer-test.mjs from this directory. Checks cover delivery capacity, quantities, obstacle avoidance, depot returns, distinct lists, FIFO checkout, one cashier, inventory conservation, sold-out behavior, and all shoppers exiting.
+
+## Distance Lab — two metrics
+
+Distance Lab compares the same two endpoints using Euclidean distance (the unobstructed straight line) and shortest aisle distance (four-way walking paths around shelves and the counter). Select any two store landmarks, walkable grid locations, the courier, or any of the six shoppers. For shelf locations, measurements end at the shelf service point, not inside the solid shelf.
+
+Start shoppers in the Customers tab or start the courier with Start delivery, then return to Distance Lab to measure live occupant-to-location or occupant-to-occupant distances. Moving occupants use their current interpolated edge position; the algorithm checks both ends of each occupied aisle edge, including the direct connection when both endpoints share one edge. Measurements update about eight times per second. Shoppers who have not entered or already exited are located at the entrance staging point and explicitly labeled that way.
+
+Orange dashed lines show direct distance, teal solid lines show shortest aisle paths, and purple dashed lines show optional routes through ordered waypoints. The same colors appear in the 3D overlay, top-down map and comparison bars. A/B markers identify the selected endpoints. The detour ratio is aisle / direct; coincident endpoints use a ratio of 1. Each grid step is one meter.
+
+Show shelf detour example selects (3,4) and (5,4), on opposite sides of the Water shelf: straight distance 2 m, aisle distance 4 m. With a shared close threshold of 3 m, an agent at A is close to B under Euclidean distance but far under aisle distance. The threshold can be changed for any selected pair.
+
+Bonus: add up to eight ordered waypoints, undo or clear them, or load any shopper's entire planned shopping route. Each segment shows both metrics and the aisle segments are summed into a full route length. Straight segment sums are distinguished from direct endpoint distance; a closed shopping tour has zero endpoint distance but a positive route length. Shopper presets include entry, all required shelves, checkout and exit, but exclude queue repositioning, browsing time and customer collisions.
+
+Run node distance-test.mjs for 46,225 location pairs checked against independent BFS, continuous moving endpoints, same-edge cases, symmetry, route sums, threshold classifications and full shopping tours.
