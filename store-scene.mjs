@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {shelves,entrance,exit,checkout,counter,cashier} from './layout.mjs';
 export function makePerson(box,color,{courier=false,basket=true}={}){const g=new THREE.Group();box(0,.65,0,.36,.62,.3,color,g);const head=new THREE.Mesh(new THREE.SphereGeometry(.16,16,12),new THREE.MeshStandardMaterial({color:0xdfb792}));head.position.y=1.12;g.add(head);box(-.1,.19,0,.12,.38,.15,0x3f4b49,g);box(.1,.19,0,.12,.38,.15,0x3f4b49,g);if(courier)box(0,.65,-.24,.35,.45,.22,0xb7905c,g);else if(basket)box(.24,.46,0,.22,.24,.26,0xc7ad7c,g);return g;}
+export function makeRobot(box){const g=new THREE.Group();box(0,.22,0,.62,.2,.6,0x465b62,g);box(0,.4,0,.56,.22,.54,0xe0e8e4,g);box(0,.51,.285,.42,.23,.035,0x182c35,g);for(const x of [-.11,.11]){const led=box(x,.53,.309,.045,.055,.012,0x5adaed,g);led.material.emissive.set(0x5adaed);led.material.emissiveIntensity=1.4;}for(const x of [-.31,.31])for(const z of [-.2,.2]){const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.11,18),new THREE.MeshStandardMaterial({color:0x26383d}));wheel.rotation.z=Math.PI/2;wheel.position.set(x,.14,z);g.add(wheel);}box(0,.7,.12,.08,.35,.08,0x42575b,g);const lidar=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,.08,20),new THREE.MeshStandardMaterial({color:0x273d46}));lidar.position.set(0,.9,.12);g.add(lidar);const beacon=box(0,.79,.12,.14,.055,.14,0x70d0d7,g);beacon.material.emissive.set(0x40d5e9);beacon.material.emissiveIntensity=1;const cargo=new THREE.Group();cargo.position.set(0,.6,-.1);g.add(cargo);for(let i=0;i<8;i++)box((i%2?1:-1)*.125,Math.floor(i/4)*.18,(Math.floor(i%4/2)?1:-1)*.1,.22,.16,.18,0xc7a776,cargo);g.userData.cargo=cargo;g.userData.beacon=beacon;return g;}
 export function buildStore({scene,box,label,colors}){
  box(8,-.24,8,16.8,.45,16.8,0xc1c8bd);box(8,-.015,8,16,.07,16,0xeae5d8);
  // Warm ceramic tiles, floor joint lines and a small external sidewalk.
@@ -28,6 +29,6 @@ export function buildStore({scene,box,label,colors}){
  const staff=makePerson(box,0x356d53,{basket:false});staff.position.set(...[cashier[0],0,cashier[1]]);staff.rotation.y=-Math.PI/2;scene.add(staff);
  for(let i=0;i<6;i++)box(12,.045,3+i,.52,.02,.12,0xc5b47a);
  box(1,.05,1,1.4,.08,1.4,0xb3bc9e);label('DELIVERIES (1,1)',1,1.8,1,'#61754d',.85);
- const courier=makePerson(box,0x386e83,{courier:true});courier.position.set(1,0,1);scene.add(courier);
- return {shelfStock,courier};
+ const courier=makeRobot(box);courier.position.set(1,0,1);scene.add(courier);
+ return {shelfStock,courier,staff};
 }

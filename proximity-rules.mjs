@@ -1,0 +1,3 @@
+export const proximityRules={slowDistance:1.5,stopDistance:.9,slowFactor:.45,pickupDistance:.6,predictionSeconds:2,predictionDistance:1.2};
+export function closestApproach(a,va,b,vb,horizon=proximityRules.predictionSeconds){const p=[b[0]-a[0],b[1]-a[1]],v=[vb[0]-va[0],vb[1]-va[1]],vv=v[0]*v[0]+v[1]*v[1],pv=p[0]*v[0]+p[1]*v[1],time=vv?Math.max(0,Math.min(horizon,-pv/vv)):0,pa=[a[0]+va[0]*time,a[1]+va[1]*time],pb=[b[0]+vb[0]*time,b[1]+vb[1]*time];return {time,distance:Math.hypot(pb[0]-pa[0],pb[1]-pa[1]),point:[(pa[0]+pb[0])/2,(pa[1]+pb[1])/2],closing:pv< -1e-8};}
+export function predictedConflict(a,va,b,vb){const p=closestApproach(a,va,b,vb);return p.closing&&p.time>1e-6&&p.distance<proximityRules.predictionDistance-1e-8?p:null;}

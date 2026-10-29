@@ -1,5 +1,9 @@
-import {path,pathLength,stops,entrance,exit,checkout,queueSlot} from './planner.mjs';
+import {stops,entrance,exit,checkout,queueSlot} from './planner.mjs';
+import {pathLength} from './navigation.mjs';
+import {freePath as path} from './walking.mjs';
 import {Traffic} from './traffic.mjs';
+import {measure} from './distance.mjs';
+import {proximityRules as rules} from './proximity-rules.mjs';
 
 export const profiles=[
  {name:'Alex',list:[{type:0,qty:2},{type:2,qty:1}]},
@@ -21,8 +25,8 @@ export function tickCustomers(world,dt,speed=.9,{advanceTraffic=true}={}){
  for(const s of world.customers){
   let a=world.traffic.get(s.actor);if(a){a.speed=speed;a.paused=false;}
   if(s.state==='arriving'){if(world.time<s.arrival||!world.traffic.canSpawn(entrance))continue;a=world.traffic.add(s.actor,entrance);if(!a)continue;s.state='shopping';send(s,stops[s.order[0]+1]);}
-  if(s.state==='shopping'){if(world.traffic.arrived(s.actor)){s.state='browsing';s.timer=1.5;}continue;}
-  if(s.state==='browsing'){s.timer-=dt;if(s.timer>0)continue;const type=s.order[s.stop],want=s.list.find(x=>x.type===type).qty,got=Math.min(want,world.stock[type]);world.stock[type]-=got;if(got)s.basket.push({type,qty:got});if(got<want)s.missing.push({type,qty:want-got});s.stop++;if(s.stop<s.order.length){s.state='shopping';send(s,stops[s.order[s.stop]+1]);}else{s.state='queueing';world.queue.push(s.id);s.target='';}continue;}
+  if(s.state==='shopping'){const type=s.order[s.stop],range=measure(s.pos,stops[type+1]).aisle;if(range<=rules.pickupDistance+1e-8){s.state='picking';s.timer=world.stock[type]>0?1.5:0;a.paused=true;a.pickup={type,distance:range,available:world.stock[type]>0};if(a.pickup.available)world.traffic.logEvent('pickup',[s.actor],`${s.name} entered the ${rules.pickupDistance} m pickup zone`,{type,distance:range});}continue;}
+  if(s.state==='picking'){a.paused=true;s.timer-=dt;if(s.timer>0)continue;const type=s.order[s.stop],want=s.list.find(x=>x.type===type).qty,got=Math.min(want,world.stock[type]);world.stock[type]-=got;if(got){s.basket.push({type,qty:got});a.lastPickup={type,until:world.traffic.time+1.2};world.traffic.logEvent('pickup',[s.actor],`${s.name} picked ${got} item${got===1?'':'s'}`,{type,distance:a.pickup.distance});}if(got<want)s.missing.push({type,qty:want-got});a.pickup=null;a.paused=false;s.stop++;if(s.stop<s.order.length){s.state='shopping';send(s,stops[s.order[s.stop]+1]);}else{s.state='queueing';world.queue.push(s.id);s.target='';}continue;}
   if(s.state==='queueing'){const index=world.queue.indexOf(s.id),target=queueSlot(index);if(s.target!==target.join())send(s,target);if(world.traffic.arrived(s.actor)&&index===0){s.state='paying';s.timer=3;}continue;}
   if(s.state==='paying'){s.timer-=dt;if(s.timer<=0){world.paidOrder.push(s.id);world.queue.shift();s.state='leaving';send(s,exit);}continue;}
   if(s.state==='leaving'&&world.traffic.arrived(s.actor)){s.pos=[...exit];s.node=[...exit];s.state='done';world.traffic.remove(s.actor);}

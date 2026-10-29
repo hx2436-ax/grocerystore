@@ -1,0 +1,11 @@
+import {blocked,cells} from './layout.mjs';
+import {distance} from './navigation.mjs';
+// Inflate fixtures by the pedestrian's body radius before testing visibility.
+const rectangles=[...blocked].map(k=>k.split(',').map(Number));
+export function clearWalk(a,b){if([...a,...b].some(n=>!Number.isFinite(n)||n<1-1e-8||n>15+1e-8))return false;for(const [x,y]of rectangles){let lo=0,hi=1;for(let axis=0;axis<2;axis++){const center=axis?y:x,d=b[axis]-a[axis];if(Math.abs(d)<1e-10){if(a[axis]<center-.88||a[axis]>center+.88){lo=2;break;}}else{const t1=(center-.88-a[axis])/d,t2=(center+.88-a[axis])/d;lo=Math.max(lo,Math.min(t1,t2));hi=Math.min(hi,Math.max(t1,t2));}}if(lo<=hi+1e-9&&lo<=1&&hi>=0)return false;}return true;}
+export const pointWalkable=p=>Array.isArray(p)&&p.length===2&&clearWalk(p,p);
+const visibility=new Map(cells.map(p=>[p.join(),cells.filter(q=>q!==p&&clearWalk(p,q))]));
+export function freePath(a,b,allow=()=>true){if(!pointWalkable(a)||!pointWalkable(b))throw Error('Choose an accessible floor location.');if(distance(a,b)<1e-8)return [a];if(clearWalk(a,b)&&allow(a,b))return [a,b];const goal=b.join(),start=a.join(),open=[start],cost=new Map([[start,0]]),positions=new Map([[start,a]]),prev=new Map(),done=new Set();
+ while(open.length){let best=0;for(let i=1;i<open.length;i++)if(cost.get(open[i])+distance(positions.get(open[i]),b)<cost.get(open[best])+distance(positions.get(open[best]),b))best=i;const key=open.splice(best,1)[0],at=positions.get(key);if(key===goal){const route=[b];let k=key;while(prev.has(k)){k=prev.get(k);route.unshift(positions.get(k));}return route;}done.add(key);const next=[...(visibility.get(key)||cells.filter(p=>clearWalk(at,p))),...(clearWalk(at,b)?[b]:[])];for(const to of next){const k=to.join();if(done.has(k)||!allow(at,to))continue;const n=cost.get(key)+distance(at,to);if(n<(cost.get(k)??Infinity)-1e-8){cost.set(k,n);positions.set(k,to);prev.set(k,key);if(!open.includes(k))open.push(k);}}}throw Error('No clear walking route is available.');
+}
+export function localWalkingSteps(p){const candidates=[];for(let i=0;i<8;i++){const angle=i*Math.PI/4,q=[p[0]+.8*Math.cos(angle),p[1]+.8*Math.sin(angle)];if(clearWalk(p,q))candidates.push(q);}return candidates;}

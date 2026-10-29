@@ -1,7 +1,7 @@
 import {depot,goods,shelves,blocked,stops} from './layout.mjs';
-import {path,pathLength} from './navigation.mjs';
+import {axisPath as path,pathLength} from './navigation.mjs';
 export * from './layout.mjs';
-export {path,pathLength} from './navigation.mjs';
+export {axisPath as path,pathLength} from './navigation.mjs';
 const paths=stops.map(a=>stops.map(b=>path(a,b))),dist=paths.map(row=>row.map(p=>pathLength(p)));
 const costs=Array.from({length:512},()=>Array(9).fill(Infinity)),parents=Array.from({length:512},()=>Array(9).fill(-1));
 for(let i=0;i<9;i++)costs[1<<i][i]=dist[0][i+1];

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {freePath as path} from './walking.mjs';
 import {blocked,goods,stops,depot,entrance,exit,checkout} from './planner.mjs';
 import {measure,complexPath,proximity} from './distance.mjs';
 
@@ -38,7 +39,7 @@ export function createDistanceView({scene,getOccupants,label}){
  $('add-waypoint').onclick=()=>{if(via.length>=8){$('distance-error').textContent='Up to eight waypoints per route.';return;}via.push($('distance-via').value);refresh();};$('remove-waypoint').onclick=()=>{via.pop();refresh();};$('clear-waypoints').onclick=()=>{via=[];refresh();};
  $('distance-example').onclick=()=>{$('distance-from').value='cell:6,6';$('distance-to').value='cell:8,6';$('close-threshold').value=3;via=[];refresh();};
  $('shopper-tour').onclick=()=>{const shopper=resolve($('tour-shopper').value);$('distance-from').value='entrance';$('distance-to').value='exit';via=[...shopper.order.map(i=>'shelf'+i),'checkout'];refresh();};
- $('tab-distance').onclick=()=>{document.body.dataset.mode='distance';for(const mode of ['customers','delivery','distance'])$('tab-'+mode).setAttribute('aria-pressed',String(mode==='distance'));refresh();};
+ $('tab-distance').onclick=()=>{document.body.dataset.mode='distance';for(const mode of ['customers','delivery','distance','proximity'])$('tab-'+mode).setAttribute('aria-pressed',String(mode==='distance'));refresh();};
  $('distance-from').value='cell:6,6';$('distance-to').value='cell:8,6';
  update();return {tick(dt){elapsed+=dt;if(elapsed>=.12||active!==(document.body.dataset.mode==='distance')){update();elapsed=0;}}};
 }
