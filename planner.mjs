@@ -1,11 +1,8 @@
-export const depot=[1,1];
-export const entrance=[1,15],checkout=[13,14],counter=[14,14];
-export const goods=['Water','Milk','Bread','Fruit','Snacks','Canned food','Personal care','Paper goods','Cold drinks'];
-export const shelves=goods.map((name,i)=>({name,x:4+(i%3)*4,y:4+Math.floor(i/3)*4}));
-export const blocked=new Set([...shelves.map(s=>`${s.x},${s.y}`),counter.join()]);
-export const stops=[depot,...shelves.map(s=>[s.x,s.y-1])];
-export function path(a,b){const queue=[a],prev=new Map([[a.join(),null]]);for(let h=0;h<queue.length;h++){const p=queue[h];if(p.join()===b.join()){let k=b.join(),out=[];while(k){out.push(k.split(',').map(Number));k=prev.get(k);}return out.reverse();}for(const d of [[1,0],[-1,0],[0,1],[0,-1]]){const n=[p[0]+d[0],p[1]+d[1]],k=n.join();if(n[0]>=1&&n[0]<=15&&n[1]>=1&&n[1]<=15&&!blocked.has(k)&&!prev.has(k)){prev.set(k,p.join());queue.push(n);}}}throw Error('Destination is unreachable');}
-const paths=stops.map(a=>stops.map(b=>path(a,b))),dist=paths.map(row=>row.map(p=>p.length-1));
+import {depot,goods,shelves,blocked,stops} from './layout.mjs';
+import {path,pathLength} from './navigation.mjs';
+export * from './layout.mjs';
+export {path,pathLength} from './navigation.mjs';
+const paths=stops.map(a=>stops.map(b=>path(a,b))),dist=paths.map(row=>row.map(p=>pathLength(p)));
 const costs=Array.from({length:512},()=>Array(9).fill(Infinity)),parents=Array.from({length:512},()=>Array(9).fill(-1));
 for(let i=0;i<9;i++)costs[1<<i][i]=dist[0][i+1];
 for(let m=1;m<512;m++)for(let i=0;i<9;i++)if(m&(1<<i))for(let j=0;j<9;j++)if(!(m&(1<<j))){const n=m|(1<<j),v=costs[m][i]+dist[i+1][j+1];if(v<costs[n][j]){costs[n][j]=v;parents[n][j]=i;}}

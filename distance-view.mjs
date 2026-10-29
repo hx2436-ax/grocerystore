@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import {blocked,goods,stops,depot,entrance,checkout} from './planner.mjs';
+import {blocked,goods,stops,depot,entrance,exit,checkout} from './planner.mjs';
 import {measure,complexPath,proximity} from './distance.mjs';
 
 export function createDistanceView({scene,getOccupants,label}){
- const $=id=>document.getElementById(id),fixed=[{id:'depot',name:'Inbound depot (1,1)',pos:depot},{id:'entrance',name:'Customer entrance / exit (1,15)',pos:entrance},{id:'checkout',name:'Checkout queue front (13,14)',pos:checkout},...goods.map((name,i)=>({id:'shelf'+i,name:name+' shelf service point',pos:stops[i+1]}))];
+ const $=id=>document.getElementById(id),fixed=[{id:'depot',name:'Inbound depot (1,1)',pos:depot},{id:'entrance',name:'Customer entrance (3,1)',pos:entrance},{id:'exit',name:'Customer exit (4,1)',pos:exit},{id:'checkout',name:'Checkout queue front (12,3)',pos:checkout},...goods.map((name,i)=>({id:'shelf'+i,name:name+' shelf service point',pos:stops[i+1]}))];
  const cells=[];for(let y=1;y<=15;y++)for(let x=1;x<=15;x++)if(!blocked.has(`${x},${y}`))cells.push({id:`cell:${x},${y}`,name:`Aisle (${x},${y})`,pos:[x,y]});
  const occupants=getOccupants(),occupantNames=occupants.map(o=>({id:o.id,name:o.name})),options=items=>items.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
  const fixedOptions='<optgroup label="Store landmarks">'+options(fixed)+'</optgroup><optgroup label="Any walkable grid location">'+options(cells)+'</optgroup>';
@@ -16,7 +16,7 @@ export function createDistanceView({scene,getOccupants,label}){
  const format=n=>n.toFixed(2)+' m';
  function line(points,color,dashed=false,height=.23){const g=new THREE.BufferGeometry().setFromPoints(points.map(p=>new THREE.Vector3(p[0],height,p[1]))),m=dashed?new THREE.LineDashedMaterial({color,dashSize:.25,gapSize:.15,depthTest:false}):new THREE.LineBasicMaterial({color,depthTest:false}),l=new THREE.Line(g,m);l.renderOrder=5;if(dashed)l.computeLineDistances();overlay.add(l);}
  function clear(){for(const c of [...overlay.children]){overlay.remove(c);c.geometry?.dispose();c.material?.dispose();}}
- function drawMap(a,b,d,route){const canvas=$('distance-map'),ctx=canvas.getContext('2d'),size=canvas.width,pad=24,step=(size-pad*2)/14,to=p=>[pad+(p[0]-1)*step,size-pad-(p[1]-1)*step];ctx.clearRect(0,0,size,size);ctx.fillStyle='#f4f6f0';ctx.fillRect(0,0,size,size);ctx.lineWidth=1;ctx.strokeStyle='#dfe6da';for(let n=1;n<=15;n++){ctx.beginPath();ctx.moveTo(...to([n,1]));ctx.lineTo(...to([n,15]));ctx.stroke();ctx.beginPath();ctx.moveTo(...to([1,n]));ctx.lineTo(...to([15,n]));ctx.stroke();}for(const k of blocked){const p=to(k.split(',').map(Number));ctx.fillStyle=k==='14,14'?'#597564':'#b8c8ae';ctx.fillRect(p[0]-step*.43,p[1]-step*.43,step*.86,step*.86);}
+ function drawMap(a,b,d,route){const canvas=$('distance-map'),ctx=canvas.getContext('2d'),size=canvas.width,pad=24,step=(size-pad*2)/14,to=p=>[pad+(p[0]-1)*step,size-pad-(p[1]-1)*step];ctx.clearRect(0,0,size,size);ctx.fillStyle='#f4f6f0';ctx.fillRect(0,0,size,size);ctx.lineWidth=1;ctx.strokeStyle='#dfe6da';for(let n=1;n<=15;n++){ctx.beginPath();ctx.moveTo(...to([n,1]));ctx.lineTo(...to([n,15]));ctx.stroke();ctx.beginPath();ctx.moveTo(...to([1,n]));ctx.lineTo(...to([15,n]));ctx.stroke();}for(const k of blocked){const p=to(k.split(',').map(Number));ctx.fillStyle=k==='13,3'?'#597564':'#b8c8ae';ctx.fillRect(p[0]-step*.43,p[1]-step*.43,step*.86,step*.86);}
  const draw=(points,color,dash)=>{ctx.strokeStyle=color;ctx.lineWidth=3;ctx.setLineDash(dash);ctx.beginPath();points.forEach((p,i)=>{const q=to(p);i?ctx.lineTo(...q):ctx.moveTo(...q);});ctx.stroke();ctx.setLineDash([]);};
  if(route)draw(route.points,'#9574bf',[3,4]);draw(d.points,'#237c88',[]);draw([a,b],'#d58a36',[7,5]);
  [a,b].forEach((p,i)=>{const q=to(p);ctx.beginPath();ctx.fillStyle=i?'#237c88':'#d58a36';ctx.arc(q[0],q[1],7,0,Math.PI*2);ctx.fill();ctx.font='bold 14px sans-serif';ctx.fillStyle='#233f34';ctx.fillText(i?'B':'A',q[0]+9,q[1]-8);});ctx.fillStyle='#6c8372';ctx.font='11px sans-serif';ctx.fillText('(1,1)',4,size-5);ctx.fillText('(15,15)',size-51,13);}
@@ -36,9 +36,9 @@ export function createDistanceView({scene,getOccupants,label}){
  function refresh(){key='';update();}
  for(const id of ['distance-from','distance-to','close-threshold','distance-overlay'])$(id).addEventListener('change',refresh);
  $('add-waypoint').onclick=()=>{if(via.length>=8){$('distance-error').textContent='Up to eight waypoints per route.';return;}via.push($('distance-via').value);refresh();};$('remove-waypoint').onclick=()=>{via.pop();refresh();};$('clear-waypoints').onclick=()=>{via=[];refresh();};
- $('distance-example').onclick=()=>{$('distance-from').value='cell:3,4';$('distance-to').value='cell:5,4';$('close-threshold').value=3;via=[];refresh();};
- $('shopper-tour').onclick=()=>{const shopper=resolve($('tour-shopper').value);$('distance-from').value='entrance';$('distance-to').value='entrance';via=[...shopper.order.map(i=>'shelf'+i),'checkout'];refresh();};
+ $('distance-example').onclick=()=>{$('distance-from').value='cell:6,6';$('distance-to').value='cell:8,6';$('close-threshold').value=3;via=[];refresh();};
+ $('shopper-tour').onclick=()=>{const shopper=resolve($('tour-shopper').value);$('distance-from').value='entrance';$('distance-to').value='exit';via=[...shopper.order.map(i=>'shelf'+i),'checkout'];refresh();};
  $('tab-distance').onclick=()=>{document.body.dataset.mode='distance';for(const mode of ['customers','delivery','distance'])$('tab-'+mode).setAttribute('aria-pressed',String(mode==='distance'));refresh();};
- $('distance-from').value='cell:3,4';$('distance-to').value='cell:5,4';
+ $('distance-from').value='cell:6,6';$('distance-to').value='cell:8,6';
  update();return {tick(dt){elapsed+=dt;if(elapsed>=.12||active!==(document.body.dataset.mode==='distance')){update();elapsed=0;}}};
 }

@@ -1,38 +1,39 @@
-# Corner — Grocery Store Lab
+# Corner — Roofless Convenience Store
 
-An English-language, single-floor Three.js simulation with nine dedicated shelf categories, capacity-constrained deliveries, and six shoppers with different shopping needs. State is local to the browser and resets on reload. Three.js and fonts load from public CDNs.
+An English-language Three.js teaching simulation: nine merchandise categories, six shoppers, one courier, a cashier, and a Distance Lab. State is local to the browser. Three.js and fonts load from public CDNs. Serve this directory via HTTP; GitHub Pages uses main / repository root.
 
-## Use
+## Store layout
 
-Serve this directory through a static HTTP server and open index.html. For GitHub Pages, use the repository root on main. Choose Customers or Delivery to change the control panel. Drag to orbit; scroll to zoom. Use Top / Perspective for an overhead view.
+The scene is a roofless dollhouse with tiled flooring, full back/right walls, cut-down front/left walls, transparent storefront glazing and a double entrance. Rear coolers hold Water, Milk and Cold drinks. Central gondolas hold Snacks, Canned food, Personal care and Paper goods. Bakery and produce fixtures sit toward the front/left, beside a coffee / food-to-go counter. Checkout faces the entrance and the cashier occupies a protected staff enclosure.
 
-- Start shoppers: six staggered arrivals enter at (1,15), collect individual lists, queue at (13,14), pay, and leave at (1,15). Select a shopper to show their dashed route. Inspect all lists and baskets in the right panel.
-- Start delivery: the courier carries optimized loads from (1,1) to assigned shelves and returns after each trip. The solid green line shows the current delivery trip. Shopping and delivery run simultaneously and pause independently. Speed changes walking speed for both.
-- Shelves start with six retail items each. Customers remove actual quantities and deliveries add inventory. Unavailable goods are recorded and skipped; stock never goes below zero. Delivered / Inbound measures cumulative inbound delivery, not current inventory.
-- Reset store, Reset all, cargo changes, or replaying a completed simulation reset both simulations and restore opening stock. Browsing takes 0.8 seconds per shelf and checkout takes two seconds per shopper. Speed changes do not change these timers.
+This is a simplified arrangement inspired by a real 7-Eleven public floor plan (sheet A3, PDF page 10) and convenience-store design guidance, not a dimensionally surveyed replica:
+- https://cityclerk.lacity.org/onlinedocs/2015/15-0715_misc_06-08-15.pdf#page=10
+- https://jaycompdevelopment.com/convenience-store-design/
 
-## Model and optimization
+The grid spans 15 x 15 nodes, with 1 m cardinal steps. Inbound depot: (1,1). Customer entry: (3,1). Adjacent exit: (4,1). Checkout queue front: (12,3); following positions extend along the aisle. Fixture nodes, the coffee counter and staff enclosure are not public walkways.
 
-One grid cell is one meter. Shelf cells and counter cell (14,14) are solid obstacles. Movement follows four-way aisle paths. People are not moving obstacles: paths may overlap. Checkout serves one person at a time in first-come order; this is a flow demonstration rather than a pedestrian collision model.
+## Shopping and movement
 
-Deliveries use BFS aisle distances and Held–Karp tours for shelf subsets. Up to 14 cargo items, subset partition dynamic programming gives the global minimum total distance including every return to the depot. Larger cargo sets use four packing candidates with minimum marginal route-cost insertion and exact per-trip tours, labeled approximate overall. The baseline is one item per round trip. Items cannot be split, and overweight items are rejected.
+Default customer arrivals are 12 seconds apart (formerly 2.5 seconds), and base walking speed is 0.9 m/s (formerly 5 m/s at Normal). Controls allow an arrival gap of 6–60 seconds and speed of 0.3–1.4 m/s. Changing arrival spacing resets the store. The Pace selector multiplies walking speeds only; it does not alter arrival gaps, browsing or checkout timers. Browsing takes 1.5 seconds per shelf and payment takes 3 seconds.
 
-Each shopper's shelf order is optimized by exhaustive permutation search from entry through required categories to checkout. Quantities affect inventory; each required shelf is visited once. Waiting and browsing times are excluded from route optimization. Checkout has one cashier and six standing positions.
+Eight-direction A* routes use 1 m orthogonal edges and sqrt(2) m diagonal edges. Diagonals cannot cut blocked fixture corners. All shoppers and the courier share one traffic controller. It reserves entire swept edge corridors with 0.9 m center-to-center clearance, preventing head-on swaps, crossing diagonals and overlap with stationary/paused people. A blocked person waits or replans around the obstruction. Entry waits until the door is clear. The cashier is a fixed obstacle inside the staff enclosure. Both simulations can run and pause independently.
+
+Each shopper has a different list and shelf visit order. Shelf order minimizes static aisle distance from entry to checkout; live collision avoidance can add waiting or detours. Shelves begin with six items each. Purchases remove actual quantities; deliveries add them. Missing goods are recorded, and stock never goes negative. Customers queue and pay one at a time in first-come order.
+
+## Deliveries
+
+Quantities, item weights and carrying capacity are adjustable. Each trip starts and ends at the depot. Weighted aisle routes feed Held–Karp shelf tours. With up to 14 individual items, subset partitioning gives the globally shortest static delivery plan; larger sets use explicitly labeled approximate packing with exact tours per trip. The baseline is one item per round trip. Items are indivisible and overweight items are rejected.
+
+Planned distance excludes people and waiting. Actual walk in the dispatch readout includes avoidance detours, so it can exceed the plan. Reset store / Reset all, cargo changes and replay reset both simulations and restore opening stock.
+
+## Distance Lab
+
+Compare Euclidean distance with the shortest weighted aisle distance for two locations or live occupants. Moving endpoints are measured at their actual positions on cardinal or diagonal edges. A/B markers, 3D lines, a top-down map and comparison bars share consistent colors. Arriving shoppers are measured at entry; exited shoppers at the adjacent exit, with explicit status labels.
+
+The gondola example measures (6,6) to (8,6): direct 2 m, aisle 6 m. A 3 m close threshold classifies the same endpoints as close geometrically but far by walking. The threshold is adjustable.
+
+Bonus routes support up to eight ordered waypoints and full shopper presets, including entry, required shelves, checkout and the adjacent exit. Segment distances are summed; the straight segment sum is distinct from direct endpoint distance. Static measurement paths ignore temporary people; movement respects them.
 
 ## Validation
 
-Run node test.mjs and node customer-test.mjs from this directory. Checks cover delivery capacity, quantities, obstacle avoidance, depot returns, distinct lists, FIFO checkout, one cashier, inventory conservation, sold-out behavior, and all shoppers exiting.
-
-## Distance Lab — two metrics
-
-Distance Lab compares the same two endpoints using Euclidean distance (the unobstructed straight line) and shortest aisle distance (four-way walking paths around shelves and the counter). Select any two store landmarks, walkable grid locations, the courier, or any of the six shoppers. For shelf locations, measurements end at the shelf service point, not inside the solid shelf.
-
-Start shoppers in the Customers tab or start the courier with Start delivery, then return to Distance Lab to measure live occupant-to-location or occupant-to-occupant distances. Moving occupants use their current interpolated edge position; the algorithm checks both ends of each occupied aisle edge, including the direct connection when both endpoints share one edge. Measurements update about eight times per second. Shoppers who have not entered or already exited are located at the entrance staging point and explicitly labeled that way.
-
-Orange dashed lines show direct distance, teal solid lines show shortest aisle paths, and purple dashed lines show optional routes through ordered waypoints. The same colors appear in the 3D overlay, top-down map and comparison bars. A/B markers identify the selected endpoints. The detour ratio is aisle / direct; coincident endpoints use a ratio of 1. Each grid step is one meter.
-
-Show shelf detour example selects (3,4) and (5,4), on opposite sides of the Water shelf: straight distance 2 m, aisle distance 4 m. With a shared close threshold of 3 m, an agent at A is close to B under Euclidean distance but far under aisle distance. The threshold can be changed for any selected pair.
-
-Bonus: add up to eight ordered waypoints, undo or clear them, or load any shopper's entire planned shopping route. Each segment shows both metrics and the aisle segments are summed into a full route length. Straight segment sums are distinguished from direct endpoint distance; a closed shopping tour has zero endpoint distance but a positive route length. Shopper presets include entry, all required shelves, checkout and exit, but exclude queue repositioning, browsing time and customer collisions.
-
-Run node distance-test.mjs for 46,225 location pairs checked against independent BFS, continuous moving endpoints, same-edge cases, symmetry, route sums, threshold classifications and full shopping tours.
+Run node test.mjs, node customer-test.mjs, node distance-test.mjs, and node motion-test.mjs. Checks cover delivery capacity and quantities, weighted diagonal shortest paths against independent Dijkstra, corner cutting, fractional moving measurements, stock conservation, FIFO checkout, head-on swaps, crossing diagonals, paused obstacles, swept collision clearance and six shoppers plus the courier completing all work.
