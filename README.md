@@ -37,3 +37,13 @@ Compare Euclidean distance with a walkable customer route for positions, live cu
 ## Validation
 
 Run node test.mjs, node customer-test.mjs, node distance-test.mjs, node motion-test.mjs and node proximity-test.mjs. Checks include packing/load limits, 32,400 visibility-route pairs against independent Floyd–Warshall, arbitrary-direction people, strictly axial robot movement, early pickup and inventory conservation, predictive yield cases, swept collision clearance, pauses and completion of the full store run.
+
+## Live customer needs
+
+A persistent top-right table shows only customers who have entered and not yet exited, in every simulation mode. Each requested item displays collected / required quantities and a status: Pending, Picking, Partial, Short stock, or Fulfilled. Counts are based on actual basket contents; beginning a pickup does not mark it fulfilled. Queueing, paying and leaving customers remain visible until they exit. Fulfilled means the item is in the basket; checkout progress is shown separately by customer state. The table updates with the simulation and resets automatically. Run node customer-needs-test.mjs to check filtering, all fulfillment states and the complete shopping lifecycle.
+
+## Fresh randomized rounds
+
+On initial load, Reset all / Reset store, New cargo, or replay, a new round randomizes inbound quantities and weights, opening stock, six distinct customer names and requests, arrival order and timing, personal speed variation, identity colors and robot capacity. Stock ranges from 0–8 per category; cargo has 1–4 items per category weighing 0.2–2.2 kg each. Robot capacity ranges from 24–40 kg. Average arrival gap is 10–18 s with individual jitter. Base speed is 0.55–0.78 m/s with personal variation, keeping generated customer speeds below 0.9 m/s. The roofless store geometry and movement/safety rules remain consistent. Manual controls can still adjust the current round.
+
+Once every started simulation has completed, a three-second result countdown generates a new random round and restarts the same active modes. If both shopping and robot delivery were started, both must finish. Pausing/resuming does not randomize. Live needs, names, stock displays, route selectors and event logs refresh on each new round. Demonstrations use the same round generator and ensure their staged pickup has at least one item available. Run node random-rounds-test.mjs for random generation and lifecycle checks.

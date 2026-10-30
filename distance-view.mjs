@@ -41,5 +41,5 @@ export function createDistanceView({scene,getOccupants,label}){
  $('shopper-tour').onclick=()=>{const shopper=resolve($('tour-shopper').value);$('distance-from').value='entrance';$('distance-to').value='exit';via=[...shopper.order.map(i=>'shelf'+i),'checkout'];refresh();};
  $('tab-distance').onclick=()=>{document.body.dataset.mode='distance';for(const mode of ['customers','delivery','distance','proximity'])$('tab-'+mode).setAttribute('aria-pressed',String(mode==='distance'));refresh();};
  $('distance-from').value='cell:6,6';$('distance-to').value='cell:8,6';
- update();return {tick(dt){elapsed+=dt;if(elapsed>=.12||active!==(document.body.dataset.mode==='distance')){update();elapsed=0;}}};
+ update();return {refresh(){const people=getOccupants().map(o=>({id:o.id,name:o.name}));const live='<optgroup label="Live occupants">'+options(people)+'</optgroup>'+fixedOptions;for(const id of ['distance-from','distance-to']){const value=$(id).value;$(id).innerHTML=live;$(id).value=value;}const value=$('tour-shopper').value;$('tour-shopper').innerHTML=options(people.filter(p=>p.id!=='courier'));$('tour-shopper').value=value;via=[];key='';update();},tick(dt){elapsed+=dt;if(elapsed>=.12||active!==(document.body.dataset.mode==='distance')){update();elapsed=0;}}};
 }

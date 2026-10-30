@@ -16,14 +16,14 @@ export const profiles=[
 // Small shopping lists allow exhaustive visit orders, including the final checkout leg.
 export function shoppingOrder(list){let best=Infinity,order=[];function visit(left,at,route,cost){if(!left.length){cost+=pathLength(path(at,checkout));if(cost<best){best=cost;order=route;}return;}for(const type of left)visit(left.filter(x=>x!==type),stops[type+1],[...route,type],cost+pathLength(path(at,stops[type+1])));}visit(list.map(x=>x.type),entrance,[],0);return order;}
 export function createCustomers(stock=Array(9).fill(6),traffic=new Traffic(),interval=12){
- return {traffic,time:0,interval,stock:[...stock],queue:[],paidOrder:[],customers:profiles.map((p,i)=>({...p,list:p.list.map(x=>({...x})),id:i,actor:'shopper'+i,order:shoppingOrder(p.list),stop:0,node:[...entrance],pos:[...entrance],state:'arriving',arrival:i*interval,basket:[],missing:[],timer:0,target:''}))};
+ return {traffic,time:0,interval,stock:[...stock],queue:[],paidOrder:[],customers:profiles.map((p,i)=>({...p,list:p.list.map(x=>({...x})),id:i,actor:'shopper'+i,order:shoppingOrder(p.list),stop:0,node:[...entrance],pos:[...entrance],state:'arriving',arrival:profiles.slice(0,i).reduce((n,person)=>n+interval*(person.arrivalFactor??1),0),basket:[],missing:[],timer:0,target:''}))};
 }
 export function syncCustomers(world){for(const s of world.customers){const a=world.traffic.get(s.actor);if(a){s.pos=[...a.pos];s.node=[...a.node];}}}
 export function tickCustomers(world,dt,speed=.9,{advanceTraffic=true}={}){
  world.time+=dt;syncCustomers(world);
- const send=(s,to)=>{world.traffic.setGoal(s.actor,to,speed);s.target=to.join();};
+ const send=(s,to)=>{world.traffic.setGoal(s.actor,to,speed*(s.speedFactor??1));s.target=to.join();};
  for(const s of world.customers){
-  let a=world.traffic.get(s.actor);if(a){a.speed=speed;a.paused=false;}
+  let a=world.traffic.get(s.actor);if(a){a.speed=speed*(s.speedFactor??1);a.paused=false;}
   if(s.state==='arriving'){if(world.time<s.arrival||!world.traffic.canSpawn(entrance))continue;a=world.traffic.add(s.actor,entrance);if(!a)continue;s.state='shopping';send(s,stops[s.order[0]+1]);}
   if(s.state==='shopping'){const type=s.order[s.stop],range=measure(s.pos,stops[type+1]).aisle;if(range<=rules.pickupDistance+1e-8){s.state='picking';s.timer=world.stock[type]>0?1.5:0;a.paused=true;a.pickup={type,distance:range,available:world.stock[type]>0};if(a.pickup.available)world.traffic.logEvent('pickup',[s.actor],`${s.name} entered the ${rules.pickupDistance} m pickup zone`,{type,distance:range});}continue;}
   if(s.state==='picking'){a.paused=true;s.timer-=dt;if(s.timer>0)continue;const type=s.order[s.stop],want=s.list.find(x=>x.type===type).qty,got=Math.min(want,world.stock[type]);world.stock[type]-=got;if(got){s.basket.push({type,qty:got});a.lastPickup={type,until:world.traffic.time+1.2};world.traffic.logEvent('pickup',[s.actor],`${s.name} picked ${got} item${got===1?'':'s'}`,{type,distance:a.pickup.distance});}if(got<want)s.missing.push({type,qty:want-got});a.pickup=null;a.paused=false;s.stop++;if(s.stop<s.order.length){s.state='shopping';send(s,stops[s.order[s.stop]+1]);}else{s.state='queueing';world.queue.push(s.id);s.target='';}continue;}
