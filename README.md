@@ -47,3 +47,21 @@ A persistent top-right table shows only customers who have entered and not yet e
 On initial load, Reset all / Reset store, New cargo, or replay, a new round randomizes inbound quantities and weights, opening stock, six distinct customer names and requests, arrival order and timing, personal speed variation, identity colors and robot capacity. Stock ranges from 0–8 per category; cargo has 1–4 items per category weighing 0.2–2.2 kg each. Robot capacity ranges from 24–40 kg. Average arrival gap is 10–18 s with individual jitter. Base speed is 0.55–0.78 m/s with personal variation, keeping generated customer speeds below 0.9 m/s. The roofless store geometry and movement/safety rules remain consistent. Manual controls can still adjust the current round.
 
 Once every started simulation has completed, a three-second result countdown generates a new random round and restarts the same active modes. If both shopping and robot delivery were started, both must finish. Pausing/resuming does not randomize. Live needs, names, stock displays, route selectors and event logs refresh on each new round. Demonstrations use the same round generator and ensure their staged pickup has at least one item available. Run node random-rounds-test.mjs for random generation and lifecycle checks.
+
+## Two levels: position and movement workshop
+
+Level 2 is an open rear mezzanine, 4 m above the ground floor. The external stair connects through a new opening in the east wall. Use **Start upstairs visit** to send a visitor from the shared entrance through the ground-floor traffic controller, up the stair, to two randomized upstairs departments and back out. This is a separate browsing / pickup demonstration; the original six shoppers, checkout queue and axial delivery robot continue on level 1. Upstairs stock is decorative inventory with one pack removed per pickup; reset restores it. Upstairs departments are not robot restocking destinations.
+
+Click a person, robot, stocked product, inbound box or shelf to inspect its live position. Public coordinates are **(X, Y, Z)** in metres: X across, Y plan depth (larger is farther from the entrance), Z elevation. Three.js uses internal Y for height; the inspector converts it explicitly. Above / below uses a vertical separation greater than 1.8 m, next-to uses same-height object anchors within 1.2 m, and left/right/front/behind use world axes. These are anchor-based relations, not claims of physical surface adjacency.
+
+Workshop conditions and indicators:
+
+| Condition | Visible indicator | Response |
+| --- | --- | --- |
+| Above / Below a ground or upper reference | Violet connector + English position description | Live inspector updates as height changes |
+| Next to the requested upper shelf | Green visitor ring and green shelf frame | Wait 1.5 s, remove one displayed pack, fulfill that need once |
+| Cup on warming station | Amber emissive pulse and ON STATION sign | Keep-warm capability is active |
+| Toward a target / Into store | Amber direction arrow on explicit 3D route, live movement text | Ground route uses shared collision avoidance |
+| Up the stairs / Down the stairs | Amber 3D arrow, continuously changing height, live English status | Transition between levels; one upstairs visitor at a time |
+
+**Hide level 2** reveals the original shop. **Save screenshot** exports a PNG with position / movement text; **Record 12 s** exports a short WebM of the scene when browser recording is available. Use these captures and the simulation URL for the workshop deck. No class-thread submission is automated.

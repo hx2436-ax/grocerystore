@@ -7,7 +7,7 @@ export function buildStore({scene,box,label,colors}){
  // Warm ceramic tiles, floor joint lines and a small external sidewalk.
  for(let n=0;n<=16;n++){box(n,.025,8,.014,.008,16,0xd6d1c6);box(8,.025,n,16,.008,.014,0xd6d1c6);}box(8,-.15,-.7,17,.14,1.5,0xc8ceca);
  // Back/right walls are full height; front/left walls are cut down for the dollhouse view.
- box(8,1.55,16,16.25,3.1,.2,0xf4f1e9);box(16,1.55,8,.2,3.1,16.25,0xeee9df);
+ box(8,1.55,16,16.25,3.1,.2,0xf4f1e9);box(16,1.55,2.25,.2,3.1,4.5,0xeee9df);box(16,1.55,11.75,.2,3.1,8.5,0xeee9df);box(16,2.95,6,.2,.3,3,0xeee9df);
  box(0,.28,8,.18,.56,16.2,0xd9ddd4);box(10.5,.28,0,11,.56,.18,0xd9ddd4);box(1,.28,0,2,.56,.18,0xd9ddd4);
  box(8,2.75,15.86,16,.17,.05,0x276a51);box(15.86,2.75,8,.05,.17,16,0x276a51);
  // Transparent front windows and double entrance, without an overhead roof.
