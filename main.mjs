@@ -9,7 +9,7 @@ import {createProximityView} from './proximity-view.mjs';
 import {walkable} from './layout.mjs';
 import {profiles} from './shoppers.mjs';
 import {RandomRounds} from './random-rounds.mjs';
-import {createUpperFloor} from './upper-floor.mjs';
+import {createUpperFloor} from './upper-floor.mjs?v=20261105-4';
 const $=id=>document.getElementById(id),colors=[0x51a7b5,0x8d99c4,0xd8aa67,0x91b963,0xda8e90,0xb49b79,0x8eb8aa,0xc7bda8,0x7cbcd1];
 const scene=new THREE.Scene();scene.background=new THREE.Color('#e9eee8');scene.fog=new THREE.Fog('#e9eee8',45,95);
 const camera=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,.1,120);camera.position.set(-22,28,-24);
